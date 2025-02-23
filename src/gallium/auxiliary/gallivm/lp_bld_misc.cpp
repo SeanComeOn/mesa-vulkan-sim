@@ -363,10 +363,17 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
    options.StackAlignmentOverride = 4;
 #endif
 
+
+
    builder.setEngineKind(EngineKind::JIT)
           .setErrorStr(&Error)
           .setTargetOptions(options)
-          .setOptLevel((CodeGenOpt::Level)OptLevel);
+#if LLVM_VERSION_MAJOR >= 18
+          .setOptLevel((llvm::CodeGenOptLevel)OptLevel);
+#else
+         .setOptLevel((CodeGenOpt::Level)OptLevel);
+#endif
+
 
 #if DETECT_OS_WINDOWS
     /*

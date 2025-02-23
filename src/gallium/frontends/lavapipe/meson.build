@@ -1,6 +1,6 @@
 embree_lib = 'embree3'
-embree_lib_dir = '/opt/embree-3.12.2.x86_64.linux/lib'
-embree_header_dir = '/opt/embree-3.12.2.x86_64.linux/include'
+embree_lib_dir = '/home/sean/Project/lxrt/vulkan-sim-root/embree-3.13.4.x86_64.linux/lib'
+embree_header_dir = '/home/sean/Project/lxrt/vulkan-sim-root/embree-3.13.4.x86_64.linux/include'
 dep_embree = declare_dependency(
     link_args : ['-L' + embree_lib_dir, '-l' + embree_lib],
     include_directories : include_directories(embree_header_dir))
@@ -9,6 +9,8 @@ gpgpusim_lib = 'cudart'
 gpgpusim_lib_dir = '/home/lucy/sim/vulkan-simulator/gpgpu-sim_emerald/lib/gcc-5.5.0/cuda-10000/release'
 dep_gpgpusim = declare_dependency(
    link_args : ['-L' + gpgpusim_lib_dir, '-l' + gpgpusim_lib])
+
+llvm_dep = dependency('llvm', required : true)
 
 lvp_entrypoints = custom_target(
   'lvp_entrypoints',
@@ -54,8 +56,11 @@ compile_args_vsim = [
   '-Wno-pointer-arith'
 ]
 
-lvp_deps = [dep_intel, dep_embree, dep_gpgpusim]
+lvp_deps = [dep_intel, dep_embree, dep_gpgpusim, llvm_dep]
 lvp_flags = [compile_args_vsim]
+
+llvm_include_dir = run_command('llvm-config', '--includedir').stdout().strip()
+inc_llvm = include_directories(llvm_include_dir)
 
 if with_platform_x11
   lvp_deps += dep_xcb_dri3
@@ -70,7 +75,7 @@ liblavapipe_st = static_library(
   [liblvp_files, lvp_entrypoints, sha1_h],
   c_args : [ c_msvc_compat_args, lvp_flags],
   gnu_symbol_visibility : 'hidden',
-  include_directories : [ inc_include, inc_src, inc_util, inc_gallium, inc_compiler, inc_gallium_aux ],
+  include_directories : [ inc_include, inc_src, inc_util, inc_gallium, inc_compiler, inc_gallium_aux, inc_llvm ],
   dependencies : [ dep_llvm, idep_nir, idep_mesautil, idep_vulkan_util, idep_vulkan_wsi,
                    idep_vulkan_runtime, lvp_deps ]
 )
